@@ -30,27 +30,30 @@ namespace DSA
         {
             get
             {
-                return signatureCommand ??= new Command((obj) =>
+                return signatureCommand ??= new Command(async(obj) =>
                 {
-                    try
+                    await Task.Run(() =>
                     {
-                        if (this.dsa?.Q != Q || this.dsa == null)
+                        try
                         {
-                            DsaSignature dsa = new(Q);
-                            this.dsa = dsa;
+                            if (this.dsa?.Q != Q || this.dsa == null)
+                            {
+                                DsaSignature dsa = new(Q);
+                                this.dsa = dsa;
+                            }
+                            var smsWithSignature = dsa.Signature(SMS);
+                            R = smsWithSignature.Item2.ToString();
+                            S = smsWithSignature.Item3.ToString();
+                            P = dsa.P.ToString();
+                            Qcheck = dsa.Q.ToString();
+                            Y = dsa.Y.ToString();
+                            Message = SMS;
                         }
-                        var smsWithSignature = dsa.Signature(SMS);
-                        R = smsWithSignature.Item2.ToString();
-                        S = smsWithSignature.Item3.ToString();
-                        P = dsa.P.ToString();
-                        Qcheck = dsa.Q.ToString();
-                        Y = dsa.Y.ToString();
-                        Message = SMS;
-                    }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show(ex.Message);
-                    }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show(ex.Message);
+                        }
+                    });
                 });
             }
         }
@@ -58,16 +61,19 @@ namespace DSA
         {
             get
             {
-                return checkCommand ??= new Command((obj) =>
+                return checkCommand ??= new Command(async(obj) =>
                 {
-                    try
+                    await Task.Run(() =>
                     {
-                        _ = (bool)(dsa?.CheckSignature(new(Message, BigInteger.Parse(R), BigInteger.Parse(S)), new(BigInteger.Parse(P), BigInteger.Parse(Qcheck), BigInteger.Parse(Y)))) ? MessageBox.Show("Это оригинал") : MessageBox.Show("Подделка");
-                    }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show(ex.Message);
-                    }
+                        try
+                        {
+                            _ = (bool)(dsa?.CheckSignature(new(Message, BigInteger.Parse(R), BigInteger.Parse(S)), new(BigInteger.Parse(P), BigInteger.Parse(Qcheck), BigInteger.Parse(Y)))) ? MessageBox.Show("Это оригинал") : MessageBox.Show("Подделка");
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show(ex.Message);
+                        }
+                    });
                     
                 });
             }
